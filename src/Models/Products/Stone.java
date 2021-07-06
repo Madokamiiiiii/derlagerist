@@ -7,13 +7,13 @@ public class Stone implements Product {
     private Type type;
     private Weight weight;
 
-    enum Type {
+    public enum Type {
         MARBLE,
         GRANITE,
         SANDSTONE
     }
 
-    enum Weight {
+    public enum Weight {
         LIGHT,
         MIDDLE,
         HEAVY
@@ -31,11 +31,27 @@ public class Stone implements Product {
 
     @Override
     public String getAttribute1() {
-        return null;
+        return switch (type) {
+            case MARBLE -> "Marmor";
+            case GRANITE -> "Granit";
+            case SANDSTONE -> "Sandstein";
+        };
     }
 
     @Override
     public String getAttribute2() {
-        return null;
+        return switch (weight) {
+            case HEAVY -> "Schwer";
+            case MIDDLE -> "Mittelschwer";
+            case LIGHT -> "Leicht";
+        };
+    }
+
+    // Returns formatted string for use for the storage etc
+    @Override
+    public String toFormattedString() {
+        return "Produkt: Stein <br>"
+                + "Art: " + getAttribute1() + "<br>"
+                + "Gewicht: " + getAttribute2();
     }
 }

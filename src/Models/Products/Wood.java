@@ -7,13 +7,13 @@ public class Wood implements Product {
     private Type type;
     private Form form;
 
-    enum Type {
+    public enum Type {
         PINE,
         OAK,
         BEECH
     }
 
-    enum Form {
+    public enum Form {
         PLANK,
         BAR,
         LOG
@@ -33,8 +33,8 @@ public class Wood implements Product {
     public String getAttribute1() {
         return switch (type) {
             case PINE -> "Kiefer";
-            case OAK -> "Buche";
-            case BEECH -> "Eiche";
+            case OAK -> "Eiche";
+            case BEECH -> "Buche";
         };
     }
 
@@ -47,4 +47,11 @@ public class Wood implements Product {
         };
     }
 
+    // Returns formatted string for use for the storage etc
+    @Override
+    public String toFormattedString() {
+        return "Produkt: Papier <br>"
+                + "Art: " + getAttribute1() + "<br>"
+                + "Form: " + getAttribute2();
+    }
 }

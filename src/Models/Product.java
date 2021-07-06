@@ -2,9 +2,11 @@ package Models;
 
 public interface Product {
 
-    public boolean productSpecificTurnAllowed();
+    boolean productSpecificTurnAllowed();
 
-    public String getAttribute1();
-    public String getAttribute2();
+    String getAttribute1();
+    String getAttribute2();
+
+    String toFormattedString();
 
 }

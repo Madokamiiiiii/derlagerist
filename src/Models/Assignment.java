@@ -1,19 +1,19 @@
 package Models;
 
 public class Assignment {
-    enum Type {
+    public enum Type {
         DELIVERING,
         WAREHOUSING
     }
 
     private Product product;
     private int reward;
-    private int units;
+    private Type type;
 
-    public Assignment(Product product, int reward, int units) {
+    public Assignment(Product product, int reward, Type type) {
         this.product = product;
         this.reward = reward;
-        this.units = units;
+        this.type = type;
     }
 
     public Product getProduct() {
@@ -24,7 +24,21 @@ public class Assignment {
         return reward;
     }
 
-    public int getUnits() {
-        return units;
+    public Type getType() {
+        return type;
+    }
+
+    public String getTypeGerman() {
+        return switch (type) {
+            case DELIVERING -> "Auslagerung";
+            case WAREHOUSING -> "Einlagerung";
+        };
+    }
+
+    // Method which returns the assignment in html format with reward and type of assignment
+    public String toFormattedText() {
+        return "<html>" + getTypeGerman() + "<br>"
+                + product.toFormattedString()  + "<br>"
+                + "Belohnung: "+  reward + "€</html>";
     }
 }

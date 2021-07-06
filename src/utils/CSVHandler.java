@@ -1,6 +1,10 @@
 package utils;
 
 import Models.Assignment;
+import Models.Product;
+import Models.Products.Paper;
+import Models.Products.Stone;
+import Models.Products.Wood;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,10 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class CSVHandler {
@@ -27,12 +28,81 @@ public class CSVHandler {
             lines.forEach(line -> {
                 String[] lineElements = line.split(";");
 
+                Product product = switch (lineElements[2]) {
+                    case "Papier" -> createPaperFromLine(lineElements);
+                    case "Holz" -> createWoodFromLine(lineElements);
+                    case "Stein" -> createStoneFromLine(lineElements);
+                    default -> throw new IllegalStateException("Unexpected value: " + lineElements[2]);
+                };
+
+                Assignment.Type type = switch (lineElements[1]) {
+                    case "Einlagerung" -> Assignment.Type.WAREHOUSING;
+                    case "Auslagerung" -> Assignment.Type.DELIVERING;
+                    default -> throw new IllegalStateException("Unexpected value: " + lineElements[1]);
+                };
+
+                assignments.add(new Assignment(product, Integer.parseInt(lineElements[5]), type));
             });
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return null;
+        return assignments;
+    }
+
+
+    private static Paper createPaperFromLine(String[] line) {
+        Paper.Color color = switch (line[3]) {
+            case "Weiß" -> Paper.Color.WHITE;
+            case "Blau" -> Paper.Color.BLUE;
+            case "Grün" -> Paper.Color.GREEN;
+            default -> throw new IllegalArgumentException("Something's wrong with the paper colors in the CSV.");
+        };
+
+        Paper.Size size = switch (line[4]) {
+            case "A3" -> Paper.Size.A3;
+            case "A4" -> Paper.Size.A4;
+            case "A5" -> Paper.Size.A5;
+            default -> throw new IllegalArgumentException("Something's wrong with the paper sizes in the CSV.");
+        };
+
+        return new Paper(color, size);
+    }
+
+    public static Wood createWoodFromLine(String[] line) {
+        Wood.Type type = switch (line[3]) {
+            case "Kiefer" -> Wood.Type.PINE;
+            case "Buche" -> Wood.Type.BEECH;
+            case "Eiche" -> Wood.Type.OAK;
+            default -> throw new IllegalArgumentException("Something's wrong with the wood types in the CSV.");
+        };
+
+        Wood.Form form = switch (line[4]) {
+            case "Bretter" -> Wood.Form.PLANK;
+            case "Balken" -> Wood.Form.BAR;
+            case "Scheit" -> Wood.Form.LOG;
+            default -> throw new IllegalArgumentException("Something's wrong with the wood forms in the CSV.");
+        };
+
+        return new Wood(type, form);
+    }
+
+    private static Product createStoneFromLine(String[] line) {
+        Stone.Type type = switch (line[3]) {
+            case "Marmor" -> Stone.Type.MARBLE;
+            case "Granit" -> Stone.Type.GRANITE;
+            case "Sandstein" -> Stone.Type.SANDSTONE;
+            default -> throw new IllegalArgumentException("Something's wrong with the stone types in the CSV.");
+        };
+
+        Stone.Weight weight = switch (line[4]) {
+            case "Leicht" -> Stone.Weight.LIGHT;
+            case "Mittel" -> Stone.Weight.MIDDLE;
+            case "Schwer" -> Stone.Weight.HEAVY;
+            default -> throw new IllegalArgumentException("Something's wrong with the stone weights in the CSV.");
+        };
+
+        return new Stone(type, weight);
     }
 }
