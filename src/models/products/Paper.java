@@ -1,6 +1,10 @@
-package Models.Products;
+package models.products;
 
-import Models.Product;
+import customui.StorageButton;
+import models.Product;
+
+import javax.swing.*;
+import java.util.List;
 
 public class Paper implements Product {
 
@@ -25,8 +29,8 @@ public class Paper implements Product {
     }
 
     @Override
-    public boolean productSpecificTurnAllowed() {
-        return false;
+    public boolean specificStoreRulesPass(int indexOfStorage, List<StorageButton> storage, JLabel message) {
+        return true;
     }
 
     @Override
@@ -43,7 +47,6 @@ public class Paper implements Product {
         return size.name();
     }
 
-    // Returns formatted string for use for the storage etc
     @Override
     public String toFormattedString() {
         return "Produkt: Papier <br>"

@@ -1,5 +1,7 @@
-import Models.Assignment;
-import utils.AssignmentButtonPanel;
+package screens;
+
+import customui.AssignmentButtonPanel;
+import customui.StorageButton;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -9,8 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MainScreen extends JFrame{
-    private Container c = this.getContentPane();
-    private MainScreenController controller;
+    private final MainScreenController controller;
 
     public MainScreen() throws IOException {
         super();
@@ -18,6 +19,9 @@ public class MainScreen extends JFrame{
         this.setDefaultCloseOperation(this.DISPOSE_ON_CLOSE);
         this.setTitle("Der Meister-Lagerist");
 
+        controller = new MainScreenController();
+
+        Container c = this.getContentPane();
         c.setLayout(new BorderLayout());
 
         // Top
@@ -25,7 +29,7 @@ public class MainScreen extends JFrame{
         topPanel.setLayout(new BoxLayout(topPanel, BoxLayout.X_AXIS));
         topPanel.add(Box.createRigidArea(new Dimension(5, 15)));
 
-        JLabel balanceLabel = new JLabel("Umsatz: ");
+        JLabel balanceLabel = new JLabel("Kontostand: ");
         balanceLabel.setFont(new Font("Serif", Font.PLAIN, 30));
         topPanel.add(balanceLabel);
         JLabel balance = new JLabel("0");
@@ -44,9 +48,7 @@ public class MainScreen extends JFrame{
         JPanel leftPanel = new JPanel(new FlowLayout());
         topPanel.add(Box.createRigidArea(new Dimension(5, 10)));
         JButton balanceButton = new JButton("Bilanz");
-        balanceButton.addActionListener(e -> {
-            // TODO: Add balance table
-        });
+        balanceButton.addActionListener(e -> controller.openBalanceTable());
         leftPanel.add(balanceButton);
         leftPanel.add(Box.createHorizontalGlue());
         c.add(leftPanel, BorderLayout.WEST);
@@ -54,19 +56,16 @@ public class MainScreen extends JFrame{
         // Bottom
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.X_AXIS));
-        Image trashIcon = ImageIO.read(this.getClass().getResource("assets/trashcan.png")).getScaledInstance(60, 90, Image.SCALE_SMOOTH);
+        Image trashIcon = ImageIO.read(this.getClass().getResource("/assets/trashcan.png")).getScaledInstance(60, 90, Image.SCALE_SMOOTH);
         JButton trashButton = new JButton(new ImageIcon(trashIcon));
         trashButton.setBorder(BorderFactory.createEmptyBorder());
         trashButton.setContentAreaFilled(false);
-        trashButton.addActionListener(e -> {
-            // TODO: Add functionality
-            System.out.println("Trash Button clicked");
-
-        });
+        trashButton.addActionListener(e -> controller.trashProduct());
         bottomPanel.add(trashButton);
         JButton newAssignment = new JButton("Neuer Auftrag");
         newAssignment.addActionListener(e -> {
             if (controller.moreAssignmentsAllowed()) {
+                message.setText("");
                 new NewAssignmentDialog(controller);
             } else {
                 message.setText("Du hast bereits 4 aktive Aufträge!");
@@ -86,8 +85,7 @@ public class MainScreen extends JFrame{
 
         List<AssignmentButtonPanel> assignmentButtonPanelList = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
-            AssignmentButtonPanel abp = new AssignmentButtonPanel();
-            abp.getAssignmentButton().addActionListener(e -> controller.setSelectedAssignment(abp));
+            AssignmentButtonPanel abp = new AssignmentButtonPanel(controller);
             rightPanel.add(abp);
             assignmentButtonPanelList.add(abp);
         }
@@ -96,7 +94,8 @@ public class MainScreen extends JFrame{
 
 
         // Center
-        List<JButton> storage = new ArrayList<>();
+        List<StorageButton> storage = new ArrayList<>();
+
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.X_AXIS));
         JPanel frontStoragePanel = new JPanel();
@@ -105,10 +104,8 @@ public class MainScreen extends JFrame{
 
         JPanel frontStorage = new JPanel(new GridLayout(5, 2));
         for (int i = 0; i < 10; i++) {
-            JButton button = new JButton(String.valueOf(i));
-            button.setBackground(Color.gray);
-            button.setBorder(BorderFactory.createLineBorder(Color.black, 2));
-            button.addActionListener(null); // TODO Add Action Listener
+            StorageButton button = new StorageButton("Leer");
+            button.addActionListener(e -> controller.manageStorage(button));
             frontStorage.add(button);
             storage.add(button);
         }
@@ -125,10 +122,8 @@ public class MainScreen extends JFrame{
 
         JPanel backStorage = new JPanel(new GridLayout(5, 2));
         for (int i = 0; i < 10; i++) {
-            JButton button = new JButton(String.valueOf(i));
-            button.setBackground(Color.gray);
-            button.setBorder(BorderFactory.createLineBorder(Color.black, 2));
-            button.addActionListener(null); // TODO Add Action Listener
+            StorageButton button = new StorageButton("Leer");
+            button.addActionListener(e -> controller.manageStorage(button));
             backStorage.add(button);
             storage.add(button);
         }
@@ -138,7 +133,9 @@ public class MainScreen extends JFrame{
 
         c.add(centerPanel, BorderLayout.CENTER);
 
-        controller  = new MainScreenController(assignmentButtonPanelList, storage);
-
+        controller.setAssignmentButtonPanels(assignmentButtonPanelList);
+        controller.setStorage(storage);
+        controller.setMessage(message);
+        controller.setBalanceLabel(balance);
     }
 }

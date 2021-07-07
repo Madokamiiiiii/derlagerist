@@ -1,4 +1,4 @@
-package Models;
+package models;
 
 public class Assignment {
     public enum Type {

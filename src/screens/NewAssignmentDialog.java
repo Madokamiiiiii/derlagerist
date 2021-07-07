@@ -1,4 +1,6 @@
-import Models.Assignment;
+package screens;
+
+import models.Assignment;
 
 import javax.swing.*;
 import java.awt.event.*;
@@ -16,7 +18,7 @@ public class NewAssignmentDialog extends JDialog {
         setModal(true);
         getRootPane().setDefaultButton(buttonOK);
 
-        assignment = controller.getAssignment();
+        assignment = controller.getCurrentAssignment();
 
         buttonOK.addActionListener(e -> onOK(controller));
 

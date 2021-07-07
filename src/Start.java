@@ -1,5 +1,6 @@
+import screens.MainScreen;
+
 import java.io.IOException;
-import java.util.Arrays;
 
 public class Start {
 

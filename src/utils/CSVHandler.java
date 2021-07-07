@@ -1,20 +1,16 @@
 package utils;
 
-import Models.Assignment;
-import Models.Product;
-import Models.Products.Paper;
-import Models.Products.Stone;
-import Models.Products.Wood;
+import models.Assignment;
+import models.Product;
+import models.products.Paper;
+import models.products.Stone;
+import models.products.Wood;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class CSVHandler {
 
@@ -80,7 +76,7 @@ public class CSVHandler {
 
         Wood.Form form = switch (line[4]) {
             case "Bretter" -> Wood.Form.PLANK;
-            case "Balken" -> Wood.Form.BAR;
+            case "Balken" -> Wood.Form.TIMBER;
             case "Scheit" -> Wood.Form.LOG;
             default -> throw new IllegalArgumentException("Something's wrong with the wood forms in the CSV.");
         };
