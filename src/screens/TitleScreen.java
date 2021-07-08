@@ -9,7 +9,7 @@ public class TitleScreen extends JFrame {
     public TitleScreen() {
         super();
         this.setTitle("Titelbildschirm");
-        this.setSize(500,500);
+        this.setSize(500, 500);
         this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         c.setLayout(new BoxLayout(c, BoxLayout.PAGE_AXIS));
         JLabel title = new JLabel("Der Meister-Lagerist");

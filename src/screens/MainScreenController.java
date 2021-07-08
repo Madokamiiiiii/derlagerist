@@ -1,29 +1,30 @@
 package screens;
 
-import models.Assignment;
 import customui.AssignmentButtonPanel;
-import utils.BalanceHandler;
-import utils.CSVHandler;
 import customui.JButtonExtension;
 import customui.StorageButton;
+import models.Assignment;
+import utils.BalanceHandler;
+import utils.CSVHandler;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.*;
+import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 
 // This class contains all the logic required for the MainScreen
 public class MainScreenController {
-    private BalanceHandler balanceHandler;
+    private final BalanceHandler balanceHandler;
 
-    private int balance = 0;
-    private JLabel balanceLabel;
-    private List<Assignment> assignments;
+    private final List<Assignment> assignments;
     private List<AssignmentButtonPanel> assignmentButtonPanels;
     private Iterator<Assignment> iterator;
     private Assignment nextAssignment;
-    private Assignment selectedAssignment;
+    private AssignmentButtonPanel selectedAssignmentButtonPanel;
     private StorageButton selectedStorage;
     private JLabel message;
     private List<StorageButton> storage;
@@ -35,7 +36,7 @@ public class MainScreenController {
     }
 
     public void setBalanceLabel(JLabel balanceLabel) {
-        this.balanceLabel = balanceLabel;
+        balanceHandler.setBalanceLabel(balanceLabel);
     }
 
     public void setAssignmentButtonPanels(List<AssignmentButtonPanel> assignmentButtonPanels) {
@@ -73,7 +74,7 @@ public class MainScreenController {
         assignmentButtonPanel.ifPresent(buttonPanel -> {
             buttonPanel.setAssignment(assignment);
             buttonPanel.getAssignmentButton()
-                    .setText(assignment.toFormattedText());
+                    .setText("<html>" + assignment.toFormattedText() + "</html>");
         });
         nextAssignment = null;
     }
@@ -85,7 +86,7 @@ public class MainScreenController {
         message.setText("");
         // Currently no assignment is selected, the storage space has a product and another storage space is selected
         // -> it's time to restorage OR unselect if the same button is clicked twice!
-        if (Objects.isNull(selectedAssignment) && Objects.nonNull(selectedStorage) && Objects.nonNull(selectedStorage.getProduct())) {
+        if (Objects.isNull(selectedAssignmentButtonPanel) && Objects.nonNull(selectedStorage) && Objects.nonNull(selectedStorage.getProduct())) {
             if (button.equals(selectedStorage)) {
                 selectOrUnselectButton(button, false);
                 selectedStorage = null;
@@ -95,51 +96,59 @@ public class MainScreenController {
         }
         // No assignment, storage space nonNull and no selected storage
         // -> Select storage space
-        else if (Objects.isNull(selectedAssignment) && Objects.nonNull(button.getProduct()) && Objects.isNull(selectedStorage)) {
+        else if (Objects.isNull(selectedAssignmentButtonPanel) && Objects.nonNull(button.getProduct()) && Objects.isNull(selectedStorage)) {
             selectOrUnselectButton(button, true);
             selectedStorage = button;
-        }
-        else if (Objects.nonNull(selectedAssignment)) {
-            if (Objects.nonNull(selectedStorage)) {
-                // Reset possible selected storage
-                System.out.println("Unselect was called");
-                selectOrUnselectButton(selectedStorage, false);
-                selectedStorage = null;
-            }
-            AssignmentButtonPanel abp = assignmentButtonPanels.stream().filter(assignmentButtonPanel -> assignmentButtonPanel.getAssignment() == selectedAssignment).findFirst().orElseThrow(NullPointerException::new);
-            if (selectedAssignment.getType().equals(Assignment.Type.WAREHOUSING)) {                         // We want to store the product of the assignment
-                if (commonStoreRulesPass(button) && selectedAssignment.getProduct().specificStoreRulesPass(storage.indexOf(button), storage, message)) {
-                    button.setText("<html>" + selectedAssignment.getProduct().toFormattedString() + "</html>");
-                    button.setProduct(selectedAssignment.getProduct());
-                } else return;
-            } else { // This is a delivering assignment
-                int indexOfStorage = storage.indexOf(button);
-                if (indexOfStorage > 9) {
-                    message.setText("Nur Produkte auf der Vorderseite können ausgeliefert werden.");
-                    return;
-                }
-                if (selectedAssignment.getProduct().getClass().equals(button.getProduct().getClass())) {    // Check if
-                    if (selectedAssignment.getProduct().compareTo(button.getProduct())) {                   // Now for the detailed check
-                        button.reset();
-                    } else {
-                        message.setText("Die Eigenschaften sind nicht wie gefordert.");
-                        return;
-                    }
-                } else {
-                    message.setText("Das ist nicht das gewollte Produkt.");
-                    return;
-                }
-            }
-            abp.reset();
-            balance += selectedAssignment.getReward();
-            balanceLabel.setText(String.valueOf(balance));
-            selectedAssignment = null;
-            // TODO: Add balance record
+        } else if (Objects.nonNull(selectedAssignmentButtonPanel)) {
+            storeOrDeliverProduct(button);
         }
     }
 
+    private void storeOrDeliverProduct(StorageButton button) {
+        Assignment selectedAssignment = selectedAssignmentButtonPanel.getAssignment();
+        if (Objects.nonNull(selectedStorage)) {
+            // Reset possible selected storage
+            selectOrUnselectButton(selectedStorage, false);
+            selectedStorage = null;
+        }
+        // We want to store the product of the assignment
+        if (selectedAssignment.getType().equals(Assignment.Type.WAREHOUSING)) {
+            if (commonStoreRulesPass(button) && selectedAssignment.getProduct().specificStoreRulesPass(storage.indexOf(button), storage, message)) {
+                button.setText(selectedAssignment.getProduct().toFormattedStringShort());
+                button.setProduct(selectedAssignment.getProduct());
+                try {
+                    button.setIcon(selectedAssignment.getProduct().getIcon());
+                } catch (IOException e) {
+                    System.err.println("Icon not found");
+                }
+                balanceHandler.addBooking(selectedAssignment.getReward(), BalanceHandler.Type.WAREHOUSING);
+            } else return;
+        } else { // This is a delivering assignment
+            int indexOfStorage = storage.indexOf(button);
+            if (indexOfStorage > 9) {
+                message.setText("Nur Produkte auf der Vorderseite können ausgeliefert werden.");
+                return;
+            }
+            if (selectedAssignment.getProduct().getClass().equals(button.getProduct().getClass())) {    // Check if it's the same product class
+                if (selectedAssignment.getProduct().compareTo(button.getProduct())) {                   // Now for the detailed check
+                    button.reset();
+                    balanceHandler.addBooking(selectedAssignment.getReward(), BalanceHandler.Type.DELIVERING);
+                } else {
+                    message.setText("Die Eigenschaften sind nicht wie gefordert.");
+                    return;
+                }
+            } else {
+                message.setText("Das ist nicht das gewollte Produkt.");
+                return;
+            }
+        }
+
+        selectedAssignmentButtonPanel.reset();
+        selectedAssignmentButtonPanel = null;
+    }
+
     private boolean commonStoreRulesPass(StorageButton button) {
-        if (Objects.nonNull(button.getProduct())) {     // Storage space is already occupied
+        if (Objects.nonNull(button.getProduct())) {              // Storage space is already occupied
             message.setText("Platz bereits belegt. Umlagerung nötig.");
             return false;
         } else if (storage.indexOf(button) > 9) {                // You can not directly store into the back
@@ -153,7 +162,7 @@ public class MainScreenController {
     // Restorage a product
     private void restorage(StorageButton button) {
         if (commonRestorageRulesPass(button) && selectedStorage.getProduct().specificStoreRulesPass(storage.indexOf(button), storage, message)) {
-            if (selectedStorage.isLongProduct()) {      // Special case: Also move back storage.
+            if (selectedStorage.isLongProduct()) {              // Special case: Also move back storage.
                 StorageButton newBackStorage = storage.get(storage.indexOf(button) + 10);
                 StorageButton oldBackStorage = storage.get(storage.indexOf(selectedStorage) + 10);
                 newBackStorage.setText(oldBackStorage.getText());
@@ -164,19 +173,18 @@ public class MainScreenController {
             button.setText(selectedStorage.getText());
             button.setProduct(selectedStorage.getProduct());
             button.setLongProduct(selectedStorage.isLongProduct());
+            button.setIcon(selectedStorage.getIcon());
             selectedStorage.reset();
             selectOrUnselectButton(selectedStorage, false);
             selectedStorage = null;
 
-            balance -= 50;
-            balanceLabel.setText(String.valueOf(balance));
-            // TODO: Add balance record
+            balanceHandler.addBooking(50, BalanceHandler.Type.RESTORAGE);
         }
     }
 
     private boolean commonRestorageRulesPass(StorageButton button) {
         if (Objects.nonNull(button.getProduct())) {
-            message.setText("Der Lagerplatz ist bereits belegt");
+            message.setText("Der Lagerplatz ist bereits belegt.");
             return false;
         }
 
@@ -190,13 +198,13 @@ public class MainScreenController {
             if (offset == -1) {
                 return true;
             }
-            } else {
-                if (offset == 1) {
-                    return true;
-                }
+        } else {
+            if (offset == 1) {
+                return true;
             }
-            message.setText("Nur auf angrenzende Lagerplätze kann umgelagert werden.");
-            return false;
+        }
+        message.setText("Nur auf angrenzende Lagerplätze kann umgelagert werden.");
+        return false;
     }
 
 
@@ -204,14 +212,14 @@ public class MainScreenController {
     // Unselect if already selected.
     // Do nothing if the panel doesn't hold an assignment.
     public void setSelectedAssignment(AssignmentButtonPanel selectedAbp) {
-        if (selectedAbp.getAssignment() == selectedAssignment) {
+        if (selectedAbp == selectedAssignmentButtonPanel) {
             selectOrUnselectButton(selectedAbp.getAssignmentButton(), false);
-            selectedAssignment = null;
+            selectedAssignmentButtonPanel = null;
         } else if (Objects.nonNull(selectedAbp.getAssignment())) {
             for (AssignmentButtonPanel abp : assignmentButtonPanels) {
                 if (abp.equals(selectedAbp)) {
                     selectOrUnselectButton(abp.getAssignmentButton(), true);
-                    selectedAssignment = abp.getAssignment();
+                    selectedAssignmentButtonPanel = abp;
                 } else {
                     selectOrUnselectButton(abp.getAssignmentButton(), false);
                 }
@@ -235,9 +243,8 @@ public class MainScreenController {
             int indexOfStorage = storage.indexOf(selectedStorage);
             if (indexOfStorage == 8 || indexOfStorage == 9) {
                 selectedStorage.reset();
-                balance -= 300;
-                balanceLabel.setText(String.valueOf(balance));
-                // TODO Balance
+                balanceHandler.addBooking(300, BalanceHandler.Type.TRASH);
+                selectedStorage = null;
             } else {
                 message.setText("Nur Produkte auf der untersten Etage können geschreddert werden.");
             }
@@ -247,10 +254,8 @@ public class MainScreenController {
     }
 
     public void rejectAssignment(AssignmentButtonPanel assignmentButtonPanel) {
-        balance -= assignmentButtonPanel.getAssignment().getReward();
-        balanceLabel.setText(String.valueOf(balance));
+        balanceHandler.addBooking(assignmentButtonPanel.getAssignment().getReward(), BalanceHandler.Type.REJECTION);
         assignmentButtonPanel.reset();
-        // TODO Balance
     }
 
     public void openBalanceTable() {

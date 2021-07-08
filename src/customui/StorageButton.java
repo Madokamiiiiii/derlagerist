@@ -13,6 +13,10 @@ public class StorageButton extends JButtonExtension {
         super(text);
         this.setBackground(Color.gray);
         this.setBorder(BorderFactory.createLineBorder(Color.black, 2));
+        this.setPreferredSize(new Dimension(180, 90));
+        this.setMinimumSize(new Dimension(140, 75));
+        this.setMargin(new Insets(10, 5, 10, 5));
+        this.setIconTextGap(3);
     }
 
     @Override
@@ -25,6 +29,7 @@ public class StorageButton extends JButtonExtension {
         product = null;
         longProduct = false;
         this.setText("Leer");
+        this.setIcon(null);
         resetDesign();
     }
 

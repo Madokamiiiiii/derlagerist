@@ -1,7 +1,9 @@
 package screens;
 
 import customui.AssignmentButtonPanel;
+import customui.MoneyLabel;
 import customui.StorageButton;
+import models.Assignment;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -9,14 +11,15 @@ import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
-public class MainScreen extends JFrame{
+public class MainScreen extends JFrame {
     private final MainScreenController controller;
 
     public MainScreen() throws IOException {
         super();
-        this.setSize(600, 650);
-        this.setDefaultCloseOperation(this.DISPOSE_ON_CLOSE);
+        this.setSize(1000, 650);
+        this.setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         this.setTitle("Der Meister-Lagerist");
 
         controller = new MainScreenController();
@@ -32,7 +35,7 @@ public class MainScreen extends JFrame{
         JLabel balanceLabel = new JLabel("Kontostand: ");
         balanceLabel.setFont(new Font("Serif", Font.PLAIN, 30));
         topPanel.add(balanceLabel);
-        JLabel balance = new JLabel("0");
+        MoneyLabel balance = new MoneyLabel("0");
         balance.setFont(new Font("Serif", Font.PLAIN, 30));
         topPanel.add(balance);
         topPanel.add(Box.createHorizontalGlue());
@@ -56,8 +59,10 @@ public class MainScreen extends JFrame{
         // Bottom
         JPanel bottomPanel = new JPanel();
         bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.X_AXIS));
-        Image trashIcon = ImageIO.read(this.getClass().getResource("/assets/trashcan.png")).getScaledInstance(60, 90, Image.SCALE_SMOOTH);
+        bottomPanel.add(Box.createHorizontalStrut(10));
+        Image trashIcon = ImageIO.read(Objects.requireNonNull(this.getClass().getResource("/assets/trashcan.png"))).getScaledInstance(60, 90, Image.SCALE_SMOOTH);
         JButton trashButton = new JButton(new ImageIcon(trashIcon));
+        trashButton.setFocusPainted(false);
         trashButton.setBorder(BorderFactory.createEmptyBorder());
         trashButton.setContentAreaFilled(false);
         trashButton.addActionListener(e -> controller.trashProduct());
@@ -66,7 +71,15 @@ public class MainScreen extends JFrame{
         newAssignment.addActionListener(e -> {
             if (controller.moreAssignmentsAllowed()) {
                 message.setText("");
-                new NewAssignmentDialog(controller);
+                Assignment assignment = controller.getCurrentAssignment();
+                if (JOptionPane.showConfirmDialog(this,
+                        "<html>Der neue Auftrag: <br>"
+                                + assignment.toFormattedText() + "</html>",
+                        "Neuer Auftrag",
+                        JOptionPane.YES_NO_OPTION) == JOptionPane.YES_OPTION) {
+                    controller.addNewAssignment(assignment);
+                }
+
             } else {
                 message.setText("Du hast bereits 4 aktive Aufträge!");
             }

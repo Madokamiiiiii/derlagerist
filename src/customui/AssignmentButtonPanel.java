@@ -5,12 +5,12 @@ import screens.MainScreenController;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.Objects;
 
 // This class creates a button pair for the assignments
 public class AssignmentButtonPanel extends JPanel {
     private final AssignmentButton assignmentButton;
     private Assignment assignment;
-    private MainScreenController controller;
 
     public AssignmentButtonPanel(MainScreenController controller) {
         super();
@@ -21,13 +21,16 @@ public class AssignmentButtonPanel extends JPanel {
         this.add(assignmentButton);
         JButton assignmentReject = new JButton("X");
         assignmentReject.addActionListener(e -> {
-            int result = JOptionPane.showConfirmDialog(this,
-                    "Bist du sicher, dass du den Auftrag ablehnen willst? Die Belohnung wird als Vertragsstrafe vom Umsatz abgezogen.",
-                    "Bestätigung",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE);
-            if (result == JOptionPane.YES_OPTION) {
-                controller.rejectAssignment(this);
+            if (Objects.nonNull(assignment)) {
+                int result = JOptionPane.showConfirmDialog(this,
+                        "<html>Bist du sicher, dass du den Auftrag ablehnen willst?<br>" +
+                                "Die Belohnung wird als Vertragsstrafe vom Umsatz abgezogen.</html>",
+                        "Bestätigung",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+                if (result == JOptionPane.YES_OPTION) {
+                    controller.rejectAssignment(this);
+                }
             }
         });
         assignmentReject.setBackground(Color.RED);

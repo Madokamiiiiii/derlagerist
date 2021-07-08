@@ -6,7 +6,9 @@ public abstract class JButtonExtension extends JButton {
 
     public JButtonExtension(String text) {
         super(text);
+        this.setFocusPainted(false);
     }
 
-    public void resetDesign() {};
+    public void resetDesign() {
+    }
 }

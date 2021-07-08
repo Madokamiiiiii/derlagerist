@@ -1,14 +1,9 @@
 package models;
 
 public class Assignment {
-    public enum Type {
-        DELIVERING,
-        WAREHOUSING
-    }
-
-    private Product product;
-    private int reward;
-    private Type type;
+    private final Product product;
+    private final int reward;
+    private final Type type;
 
     public Assignment(Product product, int reward, Type type) {
         this.product = product;
@@ -37,8 +32,13 @@ public class Assignment {
 
     // Method which returns the assignment in html format with reward and type of assignment
     public String toFormattedText() {
-        return "<html>" + getTypeGerman() + "<br>"
-                + product.toFormattedString()  + "<br>"
-                + "Belohnung: "+  reward + "€</html>";
+        return getTypeGerman() + "<br>"
+                + product.toFormattedString() + "<br>"
+                + "Belohnung: " + reward + "€";
+    }
+
+    public enum Type {
+        DELIVERING,
+        WAREHOUSING
     }
 }

@@ -10,7 +10,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class CSVHandler {
 
@@ -76,7 +77,7 @@ public class CSVHandler {
 
         Wood.Form form = switch (line[4]) {
             case "Bretter" -> Wood.Form.PLANK;
-            case "Balken" -> Wood.Form.TIMBER;
+            case "Balken" -> Wood.Form.BEAM;
             case "Scheit" -> Wood.Form.LOG;
             default -> throw new IllegalArgumentException("Something's wrong with the wood forms in the CSV.");
         };

@@ -1,25 +1,84 @@
 package utils;
 
 
+import javax.swing.*;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
-import java.util.Vector;
 
 // This class handles everything that has to do with the balance
 // Like the balance shown in the MainScreen or the balance table
 public class BalanceHandler {
-    private int revenue;
-    private int costs;
-    private int balance;
-
-    private String[] columns = {
+    private static final String[] columns = {
             "Nr.",
             "Art",
-            "Betrag"
+            "Betrag",
+            "Kontostand"
     };
+    private final List<Booking> bookings = new ArrayList<>();
+    private JLabel balanceLabel;
+    private int nr = 1;
+    private int revenue = 0;
+    private int costs = 0;
+    private int balance;
 
-    enum Type {
+    public String[] getColumns() {
+        return columns;
+    }
+
+    public int getCosts() {
+        return costs;
+    }
+
+    public int getRevenue() {
+        return revenue;
+    }
+
+    public void setBalanceLabel(JLabel balanceLabel) {
+        this.balanceLabel = balanceLabel;
+    }
+
+    public String[][] getBookingsData() {
+
+        String[][] bookingsArray = new String[bookings.size()][4];
+        for (int i = 0; i < bookings.size(); i++) {
+            bookingsArray[i][0] = bookings.get(i).nr;
+            bookingsArray[i][1] = bookings.get(i).typeToString();
+            bookingsArray[i][2] = bookings.get(i).amount;
+            bookingsArray[i][3] = bookings.get(i).balance;
+        }
+
+        return bookingsArray;
+    }
+
+    public void addBooking(int amount, Type type) {
+        switch (type) {
+            case WAREHOUSING, DELIVERING -> revenue += amount;
+            case REJECTION, TRASH, RESTORAGE -> {
+                costs += amount;
+                amount = -amount;
+            }
+        }
+
+        balance += amount;
+        balanceLabel.setText(String.valueOf(balance));
+        if (balance < 0) {
+            balanceLabel.setForeground(Color.RED);
+        } else {
+            balanceLabel.setForeground(Color.BLACK);
+        }
+
+        bookings.add(new Booking(
+                nr,
+                type,
+                amount,
+                balance
+        ));
+
+        nr++;
+    }
+
+    public enum Type {
         WAREHOUSING,
         DELIVERING,
         RESTORAGE,
@@ -27,39 +86,28 @@ public class BalanceHandler {
         REJECTION
     }
 
-    class Booking {
-        int nr;
-        Type type;
-        int amount;
+    static class Booking {
+        public final String nr;
+        public final Type type;
+        public final String amount;
+        public final String balance;
 
-        public Booking(int nr, Type type, int amount) {
-            this.nr = nr;
+        public Booking(int nr, Type type, int amount, int balance) {
+            this.nr = String.valueOf(nr);
             this.type = type;
-            this.amount = amount;
-        }
-    }
-
-    public String[] getColumns() {
-        return columns;
-    }
-
-    public Object[][] getBookingsVector() {
-        List<Booking> bookings = new ArrayList<>();
-        Booking test = new Booking(1, Type.REJECTION, 500);
-        Booking test2 = new Booking(1, Type.REJECTION, 500);
-
-        bookings.add(test);
-        bookings.add(test2);
-
-        Object[][] resu = new Object[2][3];
-        for (int i = 0; i < 2; i++) {
-            resu[i][0] = bookings.get(i).amount;
-            resu[i][1] = bookings.get(i).type;
-
+            this.amount = amount + "€";
+            this.balance = balance + "€";
         }
 
-        return resu;
+        public String typeToString() {
+            return switch (type) {
+                case WAREHOUSING -> "Einlagerung";
+                case DELIVERING -> "Auslieferung";
+                case RESTORAGE -> "Umlagerung";
+                case TRASH -> "Schreddern";
+                case REJECTION -> "Auftragsablehnung";
+            };
+        }
     }
-
 
 }
